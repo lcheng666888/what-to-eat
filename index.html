@@ -1,0 +1,1859 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#FF6B35">
+<title>今天吃什么 · 赛博抽签筒</title>
+<style>
+  :root {
+    --orange: #FF6B35;
+    --coral: #FF8A65;
+    --gold: #FFD54F;
+    --cream: #FFF8E1;
+    --deep: #BF360C;
+    --teal: #00897B;
+    --pink: #FF4081;
+    --white: #FFFFFF;
+    --gray-bg: #FAFAFA;
+    --gray-border: #E0E0E0;
+    --gray-text: #999;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+    background: var(--cream);
+    background-image:
+      repeating-linear-gradient(90deg, transparent, transparent 20px, rgba(255,107,53,0.04) 20px, rgba(255,107,53,0.04) 40px),
+      repeating-linear-gradient(0deg, transparent, transparent 20px, rgba(255,107,53,0.04) 20px, rgba(255,107,53,0.04) 40px);
+    min-height: 100vh;
+    color: #333;
+    overflow-x: hidden;
+  }
+
+  body {
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+    padding-top: calc(env(safe-area-inset-top, 0px) + 16px);
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
+  }
+
+  /* 顶部条纹装饰 */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 6px;
+    background: repeating-linear-gradient(90deg,
+      var(--orange) 0px, var(--orange) 20px,
+      var(--gold) 20px, var(--gold) 40px,
+      var(--pink) 40px, var(--pink) 60px,
+      var(--teal) 60px, var(--teal) 80px);
+    background-size: 80px 100%;
+    z-index: 100;
+    animation: stripeSlide 4s linear infinite;
+  }
+  @keyframes stripeSlide {
+    to { background-position: -80px 0; }
+  }
+
+  .app {
+    width: 100%;
+    max-width: 460px;
+    position: relative;
+  }
+
+  /* ========== 头部 ========== */
+  .header {
+    text-align: center;
+    margin-bottom: 16px;
+    margin-top: 8px;
+  }
+  .header h1 {
+    display: inline-block;
+    background: linear-gradient(135deg, var(--orange), var(--deep));
+    color: var(--white);
+    padding: 10px 28px;
+    border-radius: 50px;
+    font-size: 1.5rem;
+    letter-spacing: 3px;
+    box-shadow: 0 4px 16px rgba(255,107,53,0.35), 0 0 0 3px var(--gold);
+    animation: bannerBounce 2.5s ease-in-out infinite;
+  }
+  @keyframes bannerBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  .header p {
+    color: var(--deep);
+    font-size: 0.8rem;
+    margin-top: 8px;
+    opacity: 0.7;
+  }
+
+  /* 顶部导航小按钮 */
+  .top-actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    gap: 8px;
+  }
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--white);
+    color: var(--orange);
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(255,107,53,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+  }
+  .icon-btn:active {
+    transform: scale(0.92);
+    background: #FFF3E0;
+  }
+
+  /* ========== 卡片 ========== */
+  .card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 20px rgba(255,107,53,0.08), 0 1px 4px rgba(0,0,0,0.04);
+    border: 1.5px solid rgba(255,107,53,0.1);
+  }
+
+  .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--deep);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ========== 餐别选择 ========== */
+  .meal-group {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+  }
+  .meal-group input { display: none; }
+  .meal-group label {
+    text-align: center;
+    padding: 10px 4px;
+    border-radius: 10px;
+    border: 2px solid var(--gray-border);
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--gray-bg);
+    color: #666;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+  .meal-group label .emoji { font-size: 1.3rem; }
+  .meal-group input:checked + label {
+    border-color: var(--orange);
+    background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+    color: var(--deep);
+    font-weight: 600;
+    transform: translateY(-2px);
+    box-shadow: 0 3px 10px rgba(255,107,53,0.2);
+  }
+
+  /* ========== 口味选择 ========== */
+  .taste-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .taste-group input { display: none; }
+  .taste-group label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 2px solid var(--gray-border);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: var(--gray-bg);
+    font-size: 0.9rem;
+    color: #666;
+    user-select: none;
+  }
+  .taste-group label .emoji { font-size: 1.4rem; }
+  .taste-group label .hint {
+    font-size: 0.7rem;
+    color: var(--gray-text);
+    display: block;
+    margin-top: 1px;
+  }
+  .taste-group label .label-text { flex: 1; }
+  .taste-group input:checked + label {
+    border-color: var(--orange);
+    background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+    color: var(--deep);
+    font-weight: 600;
+    transform: translateX(3px);
+    box-shadow: 0 3px 10px rgba(255,107,53,0.15);
+  }
+  .taste-group input:checked + label .hint { color: var(--coral); }
+  .taste-group input:checked + label::after {
+    content: '✓';
+    color: var(--orange);
+    font-size: 1rem;
+    font-weight: bold;
+  }
+
+  /* ========== 主按钮 ========== */
+  .btn-main {
+    display: block;
+    width: 100%;
+    padding: 16px;
+    font-family: inherit;
+    font-size: 1.2rem;
+    font-weight: 600;
+    letter-spacing: 2px;
+    color: var(--white);
+    background: linear-gradient(135deg, var(--orange), #E65100);
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(255,107,53,0.4), 0 0 0 3px var(--gold);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.15s ease;
+    margin-top: 4px;
+  }
+  .btn-main:active {
+    transform: scale(0.97);
+    box-shadow: 0 2px 10px rgba(255,107,53,0.3), 0 0 0 3px var(--gold);
+  }
+  .btn-main.shine::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.35), transparent);
+    animation: shine 2.5s ease-in-out infinite;
+  }
+  @keyframes shine {
+    0% { left: -100%; }
+    100% { left: 200%; }
+  }
+
+  /* ========== 老虎机动画区 ========== */
+  .lottery-stage {
+    background: linear-gradient(180deg, #3E2723, #4E342E);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+    text-align: center;
+    position: relative;
+    box-shadow: inset 0 2px 16px rgba(0,0,0,0.5), 0 4px 20px rgba(62,39,35,0.25);
+    border: 2.5px solid #5D4037;
+    display: none;
+  }
+  .lottery-stage.visible { display: block; animation: stageIn 0.3s ease; }
+  @keyframes stageIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  .lottery-window {
+    background: #1B0000;
+    border-radius: 10px;
+    height: 72px;
+    overflow: hidden;
+    position: relative;
+    border: 2.5px solid #8D6E63;
+    box-shadow: inset 0 0 16px rgba(255,107,53,0.15);
+    perspective: 600px;
+  }
+
+  .lottery-window::before,
+  .lottery-window::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0;
+    height: 18px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .lottery-window::before {
+    top: 0;
+    background: linear-gradient(to bottom, rgba(27,0,0,0.95), transparent);
+  }
+  .lottery-window::after {
+    bottom: 0;
+    background: linear-gradient(to top, rgba(27,0,0,0.95), transparent);
+  }
+
+  .lottery-center-line {
+    position: absolute;
+    top: 50%;
+    left: 8px;
+    right: 8px;
+    height: 1px;
+    background: rgba(255, 213, 79, 0.3);
+    z-index: 3;
+    pointer-events: none;
+  }
+
+  .lottery-strip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    will-change: transform;
+    transform-style: preserve-3d;
+  }
+
+  .lottery-item {
+    height: 72px;
+    line-height: 72px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #FFD54F;
+    white-space: nowrap;
+    text-shadow: 0 0 10px rgba(255,213,79,0.5);
+    will-change: transform, opacity;
+  }
+
+  .lottery-status {
+    color: #FFD54F;
+    font-size: 0.8rem;
+    margin-top: 10px;
+    letter-spacing: 1px;
+    opacity: 0.8;
+  }
+
+  /* ========== 结果区 ========== */
+  .result-area {
+    display: none;
+    text-align: center;
+    animation: resultFadeIn 0.4s ease;
+  }
+  .result-area.visible { display: block; }
+  @keyframes resultFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-label {
+    font-size: 0.8rem;
+    color: var(--coral);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .result-dish {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--deep);
+    padding: 14px;
+    background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+    border-radius: 14px;
+    border: 2.5px solid var(--orange);
+    animation: resultIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 6px 20px rgba(255,107,53,0.2);
+  }
+  @keyframes resultIn {
+    0% { transform: scale(0.3) rotate(-8deg); opacity: 0; }
+    60% { transform: scale(1.08) rotate(2deg); }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .result-pair {
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: var(--teal);
+    padding: 10px;
+    background: rgba(0,137,123,0.06);
+    border-radius: 10px;
+    border: 1.5px dashed var(--teal);
+  }
+  .result-pair .pair-icon { font-size: 1.2rem; margin-right: 4px; }
+
+  .result-funny {
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: var(--pink);
+    padding: 8px;
+  }
+
+  .result-btns {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .btn-confirm, .btn-reroll {
+    flex: 1;
+    padding: 13px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .btn-confirm {
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+    color: white;
+    box-shadow: 0 4px 14px rgba(76,175,80,0.35);
+  }
+  .btn-confirm:active { transform: scale(0.96); }
+  .btn-reroll {
+    background: var(--white);
+    color: var(--orange);
+    border: 2px solid var(--orange);
+  }
+  .btn-reroll:active { transform: scale(0.96); background: #FFF3E0; }
+  .btn-back {
+    display: block; width: 100%; margin-top: 16px; padding: 11px 16px;
+    border: 1px solid #E6D8CC; border-radius: 50px;
+    background: #FFF9F0; color: #8D6E63; font: inherit; font-size: .85rem;
+    cursor: pointer; transition: background .15s, transform .15s;
+  }
+  .btn-back:hover { background: #FFEDD4; }
+  .btn-back:active { transform: scale(.98); }
+  .btn-back:focus-visible { outline: 2px solid var(--orange); outline-offset: 3px; }
+
+  /* 降级提示 */
+  .fallback-tip {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    color: var(--coral);
+    padding: 8px 10px;
+    background: rgba(255, 138, 101, 0.1);
+    border-radius: 8px;
+    border-left: 3px solid var(--orange);
+    display: none;
+  }
+  .fallback-tip.visible { display: block; }
+
+  /* ========== 模态弹窗 ========== */
+  .modal-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.visible { display: flex; animation: fadeIn 0.2s ease; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .modal {
+    background: var(--white);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 420px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes modalIn {
+    from { transform: scale(0.9) translateY(20px); opacity: 0; }
+    to { transform: scale(1) translateY(0); opacity: 1; }
+  }
+
+  .modal-header {
+    padding: 14px 16px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: linear-gradient(135deg, var(--orange), var(--deep));
+    color: white;
+  }
+  .modal-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.3rem;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-body {
+    padding: 14px 16px;
+    overflow-y: auto;
+    flex: 1;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    gap: 10px;
+  }
+
+  /* ========== 菜品管理 ========== */
+  .food-list {
+    list-style: none;
+  }
+  .food-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  .food-item:last-child { border-bottom: none; }
+
+  .food-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .food-name {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #333;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .food-tags {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+  .tag {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: #f0f0f0;
+    color: #888;
+  }
+  .tag.meal { background: #FFF3E0; color: var(--orange); }
+  .tag.taste { background: #E0F2F1; color: var(--teal); }
+  .tag.custom { background: #FCE4EC; color: var(--pink); }
+
+  .food-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .food-actions button {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    transition: all 0.15s ease;
+  }
+  .btn-edit { background: #E3F2FD; color: #1976D2; }
+  .btn-del { background: #FFEBEE; color: #D32F2F; }
+  .food-actions button:active { transform: scale(0.9); }
+
+  .add-btn {
+    width: 100%;
+    padding: 12px;
+    border: 2px dashed var(--orange);
+    border-radius: 10px;
+    background: #FFF8E1;
+    color: var(--orange);
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 12px;
+    transition: all 0.15s ease;
+  }
+  .add-btn:active { transform: scale(0.98); background: #FFECB3; }
+
+  /* 表单 */
+  .form-group {
+    margin-bottom: 12px;
+  }
+  .form-group label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 6px;
+  }
+  .form-input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid var(--gray-border);
+    border-radius: 8px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    transition: border-color 0.2s ease;
+    outline: none;
+  }
+  .form-input:focus { border-color: var(--orange); }
+
+  .checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+  .checkbox-group label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border: 2px solid var(--gray-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    background: var(--gray-bg);
+    transition: all 0.15s ease;
+    font-weight: normal;
+    margin-bottom: 0;
+  }
+  .checkbox-group input { display: none; }
+  .checkbox-group input:checked + label {
+    border-color: var(--orange);
+    background: #FFF3E0;
+    color: var(--deep);
+    font-weight: 600;
+  }
+
+  .btn-primary, .btn-secondary {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s ease;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--orange), var(--deep));
+    color: white;
+  }
+  .btn-secondary {
+    background: var(--gray-bg);
+    color: #666;
+    border: 1.5px solid var(--gray-border);
+  }
+  .btn-primary:active, .btn-secondary:active { transform: scale(0.97); }
+
+  /* 空状态 */
+  .empty-state {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--gray-text);
+    font-size: 0.85rem;
+  }
+  .empty-state .emoji { font-size: 2rem; margin-bottom: 8px; }
+
+  /* ========== 历史记录 ========== */
+  .history-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #f5f5f5;
+  }
+  .history-item:last-child { border-bottom: none; }
+  .history-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .history-emoji { font-size: 1.4rem; }
+  .history-name {
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+  .history-time {
+    font-size: 0.7rem;
+    color: var(--gray-text);
+    margin-top: 2px;
+  }
+
+  .history-clear {
+    font-size: 0.8rem;
+    color: var(--gray-text);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+
+  /* ========== 提示 & 吐司 ========== */
+  .toast {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    background: rgba(0,0,0,0.85);
+    color: white;
+    padding: 14px 28px;
+    border-radius: 50px;
+    font-size: 0.95rem;
+    z-index: 999;
+    pointer-events: none;
+    max-width: 80%;
+    text-align: center;
+  }
+  .toast.show {
+    animation: toastPop 2s ease forwards;
+  }
+  @keyframes toastPop {
+    0% { transform: translate(-50%, -50%) scale(0); }
+    15% { transform: translate(-50%, -50%) scale(1.1); }
+    25% { transform: translate(-50%, -50%) scale(1); }
+    80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+  }
+
+  .warn-tip {
+    color: var(--pink);
+    font-size: 0.75rem;
+    text-align: center;
+    margin-top: 8px;
+    display: none;
+    animation: shake 0.4s ease;
+  }
+  .warn-tip.visible { display: block; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  /* ========== 烟花画布 ========== */
+  #fireworks {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 200;
+    display: none;
+  }
+  #fireworks.active { display: block; }
+
+
+  /* ========== 页脚 ========== */
+  .footer {
+    text-align: center;
+    margin-top: 20px;
+    padding: 10px;
+    color: #BCAAA4;
+    font-size: 0.7rem;
+    letter-spacing: 1px;
+  }
+
+  /* ========== 统计信息 ========== */
+  .stats-bar {
+    display: flex;
+    justify-content: space-around;
+    margin-bottom: 12px;
+    padding: 10px;
+    background: rgba(255,107,53,0.05);
+    border-radius: 10px;
+  }
+  .stat-item {
+    text-align: center;
+  }
+  .stat-num {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--orange);
+  }
+  .stat-label {
+    font-size: 0.7rem;
+    color: var(--gray-text);
+    margin-top: 2px;
+  }
+
+  /* 标签筛选器 */
+  .filter-tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .filter-tabs::-webkit-scrollbar { display: none; }
+  .filter-tab {
+    padding: 6px 12px;
+    border-radius: 50px;
+    border: 1.5px solid var(--gray-border);
+    background: var(--white);
+    color: #666;
+    font-size: 0.75rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+  .filter-tab.active {
+    border-color: var(--orange);
+    background: var(--orange);
+    color: white;
+  }
+
+  /* 小屏适配 */
+  @media (max-width: 340px) {
+    body { padding: 12px; }
+    .header h1 { font-size: 1.3rem; padding: 8px 22px; }
+    .meal-group { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .meal-group label { padding: 8px 2px; font-size: 0.7rem; }
+    .result-dish { font-size: 1.6rem; padding: 12px; }
+  }
+
+  @media (min-width: 768px) {
+    .app { max-width: 480px; }
+    .card { padding: 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- 烟花画布 -->
+<canvas id="fireworks"></canvas>
+
+<!-- 吐司提示 -->
+<div class="toast" id="toast"></div>
+
+<div class="app">
+
+  <!-- 头部 -->
+  <div class="top-actions">
+    <button class="icon-btn" onclick="openFoodMgr()" title="管理菜品">🍱</button>
+    <button class="icon-btn" onclick="openHistory()" title="历史记录">📋</button>
+  </div>
+
+  <div class="header">
+    <h1>今天吃什么</h1>
+    <p>🎲 学生党赛博抽签筒 · 告别选择困难</p>
+  </div>
+
+  <!-- ====== 输入状态：选择区 ====== -->
+  <div id="select-state">
+    <div class="card">
+      <div class="card-title">🕐 选个餐别</div>
+      <div class="meal-group" id="meal-group">
+        <input type="radio" name="meal" id="meal-breakfast" value="breakfast">
+        <label for="meal-breakfast"><span class="emoji">🌅</span>早餐</label>
+        <input type="radio" name="meal" id="meal-lunch" value="lunch" checked>
+        <label for="meal-lunch"><span class="emoji">☀️</span>午餐</label>
+        <input type="radio" name="meal" id="meal-dinner" value="dinner">
+        <label for="meal-dinner"><span class="emoji">🌙</span>晚餐</label>
+        <input type="radio" name="meal" id="meal-snack" value="snack">
+        <label for="meal-snack"><span class="emoji">🌃</span>夜宵</label>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🤤 选个口味</div>
+      <div class="taste-group" id="taste-group">
+        <input type="radio" name="taste" id="taste-noodle" value="noodle" checked>
+        <label for="taste-noodle">
+          <span class="emoji">🍜</span>
+          <div class="label-text">
+            面食主义
+            <span class="hint">板面、米线、汤面、拉面...</span>
+          </div>
+        </label>
+
+        <input type="radio" name="taste" id="taste-rice" value="rice">
+        <label for="taste-rice">
+          <span class="emoji">🍚</span>
+          <div class="label-text">
+            干饭人
+            <span class="hint">盖浇饭、黄焖鸡、炒饭、煲仔...</span>
+          </div>
+        </label>
+
+        <input type="radio" name="taste" id="taste-spicy" value="spicy">
+        <label for="taste-spicy">
+          <span class="emoji">🌶️</span>
+          <div class="label-text">
+            重口过瘾
+            <span class="hint">麻辣香锅、螺蛳粉、炸鸡、冒菜...</span>
+          </div>
+        </label>
+
+        <input type="radio" name="taste" id="taste-light" value="light">
+        <label for="taste-light">
+          <span class="emoji">🥗</span>
+          <div class="label-text">
+            清淡养生
+            <span class="hint">轻食、沙拉、汤粥、蒸饺...</span>
+          </div>
+        </label>
+
+        <input type="radio" name="taste" id="taste-random" value="random">
+        <label for="taste-random">
+          <span class="emoji">🎲</span>
+          <div class="label-text">
+            随便都行
+            <span class="hint">全库随机，听天由命</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <p class="warn-tip" id="warn-tip">⚠️ 数据库里暂无匹配的菜品，正在放宽条件...</p>
+
+    <button class="btn-main shine" id="btn-roll" onclick="startRoll()">🎰 一键决定！</button>
+  </div>
+
+  <!-- ====== 抽签状态：老虎机动画 ====== -->
+  <div class="lottery-stage" id="lottery-stage">
+    <div class="lottery-window">
+      <div class="lottery-center-line"></div>
+      <div class="lottery-strip" id="lottery-strip"></div>
+    </div>
+    <div class="lottery-status" id="lottery-status">🎲 正在为你抽取...</div>
+  </div>
+
+  <!-- ====== 结果状态 ====== -->
+  <div class="result-area" id="result-area">
+    <div class="card">
+      <p class="result-label">🎯 命运的安排</p>
+      <div class="result-dish" id="result-dish"></div>
+      <div class="result-pair" id="result-pair"></div>
+      <div class="result-funny" id="result-funny"></div>
+      <div class="fallback-tip" id="fallback-tip"></div>
+      <div class="result-btns">
+        <button class="btn-confirm" onclick="confirmChoice()">🎆 就它了</button>
+        <button class="btn-reroll" onclick="reroll()">🔄 再抽一次</button>
+      </div>
+      <button class="btn-back" onclick="returnToSelection()">← 返回选菜</button>
+    </div>
+  </div>
+
+  <!-- 页脚 -->
+  <div class="footer">🍽️ 离线运行 · 数据保存在本地 · 零服务器成本</div>
+
+</div>
+
+<!-- ====== 菜品管理弹窗 ====== -->
+<div class="modal-overlay" id="food-mgr-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>🍱 菜品管理</h3>
+      <button class="modal-close" onclick="closeFoodMgr()">✕</button>
+    </div>
+    <div class="modal-body">
+      <button class="add-btn" onclick="openAddFood()">➕ 添加我的专属菜品</button>
+
+      <div class="stats-bar">
+        <div class="stat-item">
+          <div class="stat-num" id="stat-total">0</div>
+          <div class="stat-label">总菜品</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" id="stat-builtin">0</div>
+          <div class="stat-label">内置</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num" id="stat-custom">0</div>
+          <div class="stat-label">自定义</div>
+        </div>
+      </div>
+
+      <div class="filter-tabs" id="filter-tabs">
+        <button class="filter-tab active" data-filter="all">全部</button>
+        <button class="filter-tab" data-filter="breakfast">早餐</button>
+        <button class="filter-tab" data-filter="lunch">午餐</button>
+        <button class="filter-tab" data-filter="dinner">晚餐</button>
+        <button class="filter-tab" data-filter="snack">夜宵</button>
+        <button class="filter-tab" data-filter="custom">我的</button>
+      </div>
+
+      <ul class="food-list" id="food-list"></ul>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 添加/编辑菜品弹窗 ====== -->
+<div class="modal-overlay" id="food-edit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="edit-title">➕ 添加菜品</h3>
+      <button class="modal-close" onclick="closeEditFood()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>菜品名称</label>
+        <input type="text" class="form-input" id="food-name-input" placeholder="如：老坛酸菜面" maxlength="12">
+      </div>
+      <div class="form-group">
+        <label>适用餐别（可多选）</label>
+        <div class="checkbox-group" id="meal-checkboxes">
+          <input type="checkbox" id="m-breakfast" value="breakfast" checked>
+          <label for="m-breakfast">🌅 早餐</label>
+          <input type="checkbox" id="m-lunch" value="lunch" checked>
+          <label for="m-lunch">☀️ 午餐</label>
+          <input type="checkbox" id="m-dinner" value="dinner" checked>
+          <label for="m-dinner">🌙 晚餐</label>
+          <input type="checkbox" id="m-snack" value="snack">
+          <label for="m-snack">🌃 夜宵</label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>口味标签（可多选）</label>
+        <div class="checkbox-group" id="taste-checkboxes">
+          <input type="checkbox" id="t-noodle" value="noodle">
+          <label for="t-noodle">🍜 面食</label>
+          <input type="checkbox" id="t-rice" value="rice">
+          <label for="t-rice">🍚 干饭</label>
+          <input type="checkbox" id="t-spicy" value="spicy">
+          <label for="t-spicy">🌶️ 重口</label>
+          <input type="checkbox" id="t-light" value="light">
+          <label for="t-light">🥗 清淡</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeEditFood()">取消</button>
+      <button class="btn-primary" onclick="saveFood()">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== 历史记录弹窗 ====== -->
+<div class="modal-overlay" id="history-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>📋 历史记录</h3>
+      <button class="modal-close" onclick="closeHistory()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <span style="font-size:0.85rem; color:#666;">最近 <b id="history-count">0</b> 条记录</span>
+        <button class="history-clear" onclick="clearHistory()">🗑️ 清空</button>
+      </div>
+      <div id="history-list"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== 常量定义 ====================
+const MEAL_LABELS = { breakfast: '早餐', lunch: '午餐', dinner: '晚餐', snack: '夜宵' };
+const TASTE_LABELS = { noodle: '面食', rice: '干饭', spicy: '重口', light: '清淡' };
+const MEAL_EMOJIS = { breakfast: '🌅', lunch: '☀️', dinner: '🌙', snack: '🌃' };
+const TASTE_EMOJIS = { noodle: '🍜', rice: '🍚', spicy: '🌶️', light: '🥗' };
+
+const STORAGE_KEYS = {
+  CUSTOM_FOODS: 'cyb_foods_custom',
+  HISTORY: 'cyb_history',
+  PREFS: 'cyb_prefs'
+};
+
+// ==================== 内置菜品库（28道高校高频菜品） ====================
+const BUILTIN_FOODS = [
+  // 面食类
+  { id: 'b01', name: '兰州拉面', meals: ['breakfast','lunch','dinner'], tastes: ['noodle','light'], custom: false },
+  { id: 'b02', name: '安徽板面', meals: ['lunch','dinner','snack'], tastes: ['noodle','spicy'], custom: false },
+  { id: 'b03', name: '过桥米线', meals: ['lunch','dinner'], tastes: ['noodle','light'], custom: false },
+  { id: 'b04', name: '重庆小面', meals: ['breakfast','lunch','dinner'], tastes: ['noodle','spicy'], custom: false },
+  { id: 'b05', name: '酸汤面', meals: ['lunch','dinner'], tastes: ['noodle','spicy'], custom: false },
+  { id: 'b06', name: '炸酱面', meals: ['lunch','dinner'], tastes: ['noodle'], custom: false },
+  { id: 'b07', name: '鸭血粉丝汤', meals: ['breakfast','lunch','dinner','snack'], tastes: ['noodle','light'], custom: false },
+
+  // 干饭类
+  { id: 'b08', name: '黄焖鸡米饭', meals: ['lunch','dinner'], tastes: ['rice'], custom: false },
+  { id: 'b09', name: '宫保鸡丁盖饭', meals: ['lunch','dinner'], tastes: ['rice','spicy'], custom: false },
+  { id: 'b10', name: '鱼香肉丝盖饭', meals: ['lunch','dinner'], tastes: ['rice','spicy'], custom: false },
+  { id: 'b11', name: '红烧肉盖饭', meals: ['lunch','dinner'], tastes: ['rice'], custom: false },
+  { id: 'b12', name: '咖喱鸡肉饭', meals: ['lunch','dinner'], tastes: ['rice'], custom: false },
+  { id: 'b13', name: '照烧鸡腿饭', meals: ['lunch','dinner'], tastes: ['rice'], custom: false },
+  { id: 'b14', name: '扬州炒饭', meals: ['lunch','dinner','snack'], tastes: ['rice'], custom: false },
+  { id: 'b15', name: '卤肉饭', meals: ['lunch','dinner'], tastes: ['rice'], custom: false },
+  { id: 'b16', name: '蛋炒饭', meals: ['lunch','dinner','snack'], tastes: ['rice','light'], custom: false },
+
+  // 重口类
+  { id: 'b17', name: '麻辣香锅', meals: ['lunch','dinner'], tastes: ['spicy','rice'], custom: false },
+  { id: 'b18', name: '麻辣烫', meals: ['lunch','dinner','snack'], tastes: ['spicy','noodle'], custom: false },
+  { id: 'b19', name: '螺蛳粉', meals: ['lunch','dinner','snack'], tastes: ['spicy','noodle'], custom: false },
+  { id: 'b20', name: '韩式炸鸡', meals: ['dinner','snack'], tastes: ['spicy'], custom: false },
+  { id: 'b21', name: '水煮肉片', meals: ['lunch','dinner'], tastes: ['spicy','rice'], custom: false },
+  { id: 'b22', name: '新疆炒米粉', meals: ['lunch','dinner'], tastes: ['spicy','noodle'], custom: false },
+  { id: 'b23', name: '冒菜', meals: ['lunch','dinner'], tastes: ['spicy'], custom: false },
+
+  // 清淡类
+  { id: 'b24', name: '轻食沙拉', meals: ['lunch','dinner'], tastes: ['light'], custom: false },
+  { id: 'b25', name: '水饺', meals: ['lunch','dinner','snack'], tastes: ['light'], custom: false },
+  { id: 'b26', name: '小米粥配包子', meals: ['breakfast','dinner'], tastes: ['light'], custom: false },
+  { id: 'b27', name: '蒸饺套餐', meals: ['breakfast','lunch','dinner'], tastes: ['light'], custom: false },
+  { id: 'b28', name: '三明治', meals: ['breakfast','lunch'], tastes: ['light'], custom: false },
+];
+
+// 灵魂绝配库
+const PAIRINGS = [
+  { icon: '🍳', text: '加个荷包蛋，营养满分' },
+  { icon: '🥤', text: '配瓶冰可乐，快乐加倍' },
+  { icon: '🧊', text: '来杯冰柠檬水解腻' },
+  { icon: '🥒', text: '加份拍黄瓜开开胃' },
+  { icon: '🍗', text: '配个炸鸡腿犒劳自己' },
+  { icon: '🍦', text: '饭后一支甜筒，美滋滋' },
+  { icon: '🧋', text: '配杯珍珠奶茶，绝了' },
+  { icon: '🫘', text: '加颗卤蛋，能量拉满' },
+  { icon: '🍉', text: '饭后一块冰西瓜，爽' },
+  { icon: '🥬', text: '加份烫青菜补补维生素' },
+  { icon: '🍮', text: '饭后双皮奶，甜甜的' },
+  { icon: '🍺', text: '配瓶冰啤，美滋滋（未成年勿饮）' },
+];
+
+// 逗趣文案
+const FUNNY_TIPS = [
+  '再纠结食堂就关门了！',
+  '命运的齿轮开始转动...',
+  '早吃早享受，晚吃没座位！',
+  '这是上天的安排，别犟了',
+  '抽到啥吃啥，主打一个随缘',
+  '大学生不骗大学生，就它了',
+  '犹豫就会败北，果断就会白给',
+  '吃饭不积极，思想有问题',
+  '干饭人，干饭魂，干饭都是人上人',
+  '这顿吃完，下顿再说！',
+  '你的外卖正在路上...才怪',
+  '再不决定我就替你吃了啊',
+];
+
+// ==================== 状态管理 ====================
+let state = {
+  foods: [],          // 合并后的菜品库
+  customFoods: [],    // 用户自定义菜品
+  history: [],        // 历史记录
+  currentMeal: 'lunch',
+  currentTaste: 'noodle',
+  currentResult: null,
+  currentPool: [],    // 当前筛选池
+  fallbackLevel: 0,   // 降级层级
+  rollRAF: null,
+  isRolling: false,   // 抽取动画及结果展示等待期间禁止重复触发
+  isConfirming: false,
+  resultConfirmed: false, // 当前抽取结果仅保存一次历史
+  confirmTimer: null,
+  editingId: null,    // 正在编辑的菜品ID
+  filterTab: 'all',
+};
+
+// ==================== 数据层：LocalStorage 操作 ====================
+function loadCustomFoods() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.CUSTOM_FOODS);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) {
+    console.warn('读取自定义菜品失败', e);
+    return [];
+  }
+}
+
+function saveCustomFoods() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_FOODS, JSON.stringify(state.customFoods));
+  } catch (e) {
+    console.warn('保存自定义菜品失败', e);
+    showToast('⚠️ 本地存储失败');
+  }
+}
+
+function loadHistory() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.HISTORY);
+    return raw ? JSON.parse(raw) : [];
+  } catch (e) { return []; }
+}
+
+function saveHistory() {
+  try {
+    // 只保留最近50条
+    state.history = state.history.slice(0, 50);
+    localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(state.history));
+  } catch (e) {}
+}
+
+function loadPrefs() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.PREFS);
+    return raw ? JSON.parse(raw) : {};
+  } catch (e) { return {}; }
+}
+
+function savePrefs() {
+  try {
+    localStorage.setItem(STORAGE_KEYS.PREFS, JSON.stringify({
+      meal: state.currentMeal,
+      taste: state.currentTaste
+    }));
+  } catch (e) {}
+}
+
+// 合并菜品库（内置 + 自定义，按 name 去重）
+function mergeFoods() {
+  const map = new Map();
+  BUILTIN_FOODS.forEach(f => map.set(f.name, f));
+  state.customFoods.forEach(f => {
+    // 自定义菜品优先级更高，覆盖同名内置
+    map.set(f.name, f);
+  });
+  state.foods = Array.from(map.values());
+}
+
+// ==================== 筛选层：按条件筛选菜品 ====================
+function filterFoods(meal, taste) {
+  return state.foods.filter(f => {
+    const mealMatch = f.meals.includes(meal);
+    if (taste === 'random') return mealMatch;
+    const tasteMatch = f.tastes.includes(taste);
+    return mealMatch && tasteMatch;
+  });
+}
+
+// 优雅降级：无匹配时逐级放宽筛选
+function getFilteredPool(meal, taste) {
+  state.fallbackLevel = 0;
+
+  // 第0级：正常筛选（餐别 + 口味）
+  let pool = filterFoods(meal, taste);
+  if (pool.length > 0) return pool;
+
+  // 第1级：放宽口味（只按餐别筛）
+  state.fallbackLevel = 1;
+  pool = state.foods.filter(f => f.meals.includes(meal));
+  if (pool.length > 0) return pool;
+
+  // 第2级：放宽餐别（只按口味筛）
+  state.fallbackLevel = 2;
+  if (taste !== 'random') {
+    pool = state.foods.filter(f => f.tastes.includes(taste));
+    if (pool.length > 0) return pool;
+  }
+
+  // 第3级：全部菜品兜底
+  state.fallbackLevel = 3;
+  return state.foods.length > 0 ? state.foods : [];
+}
+
+function getFallbackMessage() {
+  switch (state.fallbackLevel) {
+    case 1: return '💡 该餐别+口味组合暂无匹配，已放宽至该餐别全部菜品';
+    case 2: return '💡 该餐别暂无匹配，已放宽至该口味全部菜品';
+    case 3: return '💡 条件太苛刻啦，已从全库随机抽取';
+    default: return '';
+  }
+}
+
+// ==================== 老虎机动画 ====================
+const ITEM_HEIGHT = 72;
+
+function buildLotteryStrip(pool) {
+  const strip = document.getElementById('lottery-strip');
+  // 重复多次以实现无限滚动效果
+  const repeatTimes = 15;
+  const items = [];
+  for (let i = 0; i < repeatTimes; i++) {
+    items.push(...pool);
+  }
+  strip.innerHTML = items.map(f => `<div class="lottery-item">${f.name}</div>`).join('');
+  return items;
+}
+
+function startRoll(isReroll = false) {
+  if (state.isRolling || state.isConfirming) return;
+  // 获取当前选择
+  const mealEl = document.querySelector('input[name="meal"]:checked');
+  const tasteEl = document.querySelector('input[name="taste"]:checked');
+  if (!mealEl || !tasteEl) return;
+
+  state.currentMeal = mealEl.value;
+  state.currentTaste = tasteEl.value;
+  savePrefs();
+
+  // 获取筛选池（带降级）
+  const pool = isReroll && state.currentPool.length > 0
+    ? state.currentPool
+    : getFilteredPool(state.currentMeal, state.currentTaste);
+
+  if (pool.length === 0) {
+    showToast('😢 数据库空空如也，先去添加菜品吧！');
+    return;
+  }
+
+  state.currentPool = pool;
+
+  // 随机选一个结果
+  const candidates = pool.map((food, index) => index).filter(index =>
+    !isReroll || pool[index].name !== state.currentResult?.name
+  );
+  const eligible = candidates.length > 0 ? candidates : pool.map((food, index) => index);
+  const resultIdx = eligible[Math.floor(Math.random() * eligible.length)];
+  state.currentResult = pool[resultIdx];
+  state.resultConfirmed = false;
+  state.isRolling = true;
+
+  // UI 切换
+  document.getElementById('select-state').style.display = 'none';
+  document.getElementById('result-area').classList.remove('visible');
+  document.getElementById('lottery-stage').classList.add('visible');
+
+  // 构建滚动列表
+  const items = buildLotteryStrip(pool);
+
+  // 计算目标位置：停在第 10 轮的结果位置
+  const targetRepeat = 10;
+  const targetIndex = targetRepeat * pool.length + resultIdx;
+  const targetY = targetIndex * ITEM_HEIGHT;
+
+  // 滚动动画
+  const strip = document.getElementById('lottery-strip');
+  strip.style.transform = 'translateY(0px)';
+  const startTime = performance.now();
+  const duration = 3200 + Math.random() * 800; // 3.2-4秒
+
+  let statusEl = document.getElementById('lottery-status');
+  statusEl.textContent = '🎲 正在为你抽取...';
+
+  function animate(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+
+    // easeOutCubic 减速效果，模拟老虎机减速
+    const eased = 1 - Math.pow(1 - progress, 3.5);
+    const currentY = eased * targetY;
+
+    strip.style.transform = `translateY(-${currentY}px)`;
+
+    if (progress < 1) {
+      state.rollRAF = requestAnimationFrame(animate);
+    } else {
+      // 精确停在目标位置
+      strip.style.transform = `translateY(-${targetY}px)`;
+      statusEl.textContent = '✨ 就是它了！';
+      state.rollRAF = null;
+      setTimeout(showResult, 500);
+    }
+  }
+
+  state.rollRAF = requestAnimationFrame(animate);
+}
+
+// ==================== 结果展示 ====================
+function showResult() {
+  document.getElementById('lottery-stage').classList.remove('visible');
+
+  const dishEl = document.getElementById('result-dish');
+  dishEl.textContent = state.currentResult.name;
+  // 重启动画
+  dishEl.style.animation = 'none';
+  dishEl.offsetHeight;
+  dishEl.style.animation = '';
+
+  // 搭配建议
+  const pairing = PAIRINGS[Math.floor(Math.random() * PAIRINGS.length)];
+  document.getElementById('result-pair').innerHTML =
+    `<span class="pair-icon">${pairing.icon}</span>${pairing.text}`;
+
+  // 逗趣文案
+  const funny = FUNNY_TIPS[Math.floor(Math.random() * FUNNY_TIPS.length)];
+  document.getElementById('result-funny').textContent = funny;
+
+  // 降级提示
+  const fallbackEl = document.getElementById('fallback-tip');
+  const msg = getFallbackMessage();
+  if (msg) {
+    fallbackEl.textContent = msg;
+    fallbackEl.classList.add('visible');
+  } else {
+    fallbackEl.classList.remove('visible');
+  }
+
+  // 显示结果区
+  const resultArea = document.getElementById('result-area');
+  resultArea.classList.add('visible');
+  state.isRolling = false;
+}
+
+function reroll() {
+  // 重抽复用完整老虎机动画，并在有其他候选时避开上一道菜。
+  startRoll(true);
+}
+
+function confirmChoice() {
+  if (state.isConfirming || state.isRolling || !state.currentResult) return;
+  state.isConfirming = true;
+  // 同一轮结果只写入一次；重复确认仅重播礼花。
+  if (!state.resultConfirmed) {
+    state.history.unshift({
+      name: state.currentResult.name,
+      meal: state.currentMeal,
+      time: Date.now()
+    });
+    saveHistory();
+    state.resultConfirmed = true;
+  }
+
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduceMotion) triggerFireworks();
+  showToast('🎉 就吃' + state.currentResult.name + '，好好享用！');
+
+  // 礼花结束后仍保留当前结果，不自动切换到选菜页。
+  state.confirmTimer = setTimeout(() => {
+    state.isConfirming = false;
+    state.confirmTimer = null;
+  }, 2800);
+}
+
+function returnToSelection() {
+  if (state.isRolling) return;
+  clearTimeout(state.confirmTimer);
+  state.confirmTimer = null;
+  state.isConfirming = false;
+  stopFireworks();
+  state.currentResult = null;
+  state.currentPool = [];
+  state.resultConfirmed = false;
+  document.getElementById('result-area').classList.remove('visible');
+  document.getElementById('lottery-stage').classList.remove('visible');
+  document.getElementById('select-state').style.display = 'block';
+  document.getElementById('btn-roll').focus();
+}
+
+// ==================== 菜品管理 ====================
+function openFoodMgr() {
+  updateFoodStats();
+  renderFoodList();
+  document.getElementById('food-mgr-modal').classList.add('visible');
+}
+
+function closeFoodMgr() {
+  document.getElementById('food-mgr-modal').classList.remove('visible');
+}
+
+function updateFoodStats() {
+  const builtinCount = BUILTIN_FOODS.filter(b =>
+    !state.customFoods.some(c => c.name === b.name)
+  ).length;
+  document.getElementById('stat-total').textContent = state.foods.length;
+  document.getElementById('stat-builtin').textContent = builtinCount;
+  document.getElementById('stat-custom').textContent = state.customFoods.length;
+}
+
+function renderFoodList() {
+  const listEl = document.getElementById('food-list');
+  let filtered = state.foods;
+
+  if (state.filterTab === 'custom') {
+    filtered = state.foods.filter(f => f.custom);
+  } else if (state.filterTab !== 'all') {
+    filtered = state.foods.filter(f => f.meals.includes(state.filterTab));
+  }
+
+  if (filtered.length === 0) {
+    listEl.innerHTML = `<div class="empty-state"><div class="emoji">🍽️</div>暂无菜品</div>`;
+    return;
+  }
+
+  listEl.innerHTML = filtered.map(f => `
+    <li class="food-item">
+      <div class="food-info">
+        <div class="food-name">${f.name}</div>
+        <div class="food-tags">
+          ${f.custom ? '<span class="tag custom">我的</span>' : ''}
+          ${f.meals.map(m => `<span class="tag meal">${MEAL_EMOJIS[m]}${MEAL_LABELS[m]}</span>`).join('')}
+        </div>
+        <div class="food-tags" style="margin-top:4px;">
+          ${f.tastes.map(t => `<span class="tag taste">${TASTE_EMOJIS[t]}${TASTE_LABELS[t]}</span>`).join('')}
+        </div>
+      </div>
+      <div class="food-actions">
+        <button class="btn-edit" onclick="editFood('${f.id}')" title="编辑">✏️</button>
+        ${f.custom ? `<button class="btn-del" onclick="deleteFood('${f.id}')" title="删除">🗑️</button>` : ''}
+      </div>
+    </li>
+  `).join('');
+}
+
+// 筛选tab切换
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.filter-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      state.filterTab = tab.dataset.filter;
+      renderFoodList();
+    });
+  });
+});
+
+function openAddFood() {
+  state.editingId = null;
+  document.getElementById('edit-title').textContent = '➕ 添加菜品';
+  document.getElementById('food-name-input').value = '';
+  // 重置复选框
+  document.querySelectorAll('#meal-checkboxes input').forEach(cb => {
+    cb.checked = ['breakfast','lunch','dinner'].includes(cb.value);
+  });
+  document.querySelectorAll('#taste-checkboxes input').forEach(cb => cb.checked = false);
+  document.getElementById('food-edit-modal').classList.add('visible');
+  setTimeout(() => document.getElementById('food-name-input').focus(), 300);
+}
+
+function editFood(id) {
+  const food = state.foods.find(f => f.id === id);
+  if (!food) return;
+
+  state.editingId = id;
+  document.getElementById('edit-title').textContent = food.custom ? '✏️ 编辑菜品' : '📋 查看菜品';
+  document.getElementById('food-name-input').value = food.name;
+
+  document.querySelectorAll('#meal-checkboxes input').forEach(cb => {
+    cb.checked = food.meals.includes(cb.value);
+  });
+  document.querySelectorAll('#taste-checkboxes input').forEach(cb => {
+    cb.checked = food.tastes.includes(cb.value);
+  });
+
+  // 如果是内置菜品，只能看不能改（但可以添加同名自定义来覆盖）
+  if (!food.custom) {
+    document.getElementById('food-name-input').readOnly = true;
+    document.querySelectorAll('#meal-checkboxes input, #taste-checkboxes input').forEach(cb => {
+      cb.disabled = true;
+    });
+  } else {
+    document.getElementById('food-name-input').readOnly = false;
+    document.querySelectorAll('#meal-checkboxes input, #taste-checkboxes input').forEach(cb => {
+      cb.disabled = false;
+    });
+  }
+
+  document.getElementById('food-edit-modal').classList.add('visible');
+}
+
+function closeEditFood() {
+  document.getElementById('food-edit-modal').classList.remove('visible');
+  state.editingId = null;
+}
+
+function saveFood() {
+  const name = document.getElementById('food-name-input').value.trim();
+  if (!name) {
+    showToast('⚠️ 请输入菜品名称');
+    return;
+  }
+
+  const meals = Array.from(document.querySelectorAll('#meal-checkboxes input:checked'))
+    .map(cb => cb.value);
+  const tastes = Array.from(document.querySelectorAll('#taste-checkboxes input:checked'))
+    .map(cb => cb.value);
+
+  if (meals.length === 0) {
+    showToast('⚠️ 至少选一个餐别');
+    return;
+  }
+
+  if (state.editingId) {
+    // 编辑模式（仅自定义菜品可编辑）
+    const idx = state.customFoods.findIndex(f => f.id === state.editingId);
+    if (idx !== -1) {
+      state.customFoods[idx] = { ...state.customFoods[idx], name, meals, tastes };
+      saveCustomFoods();
+      mergeFoods();
+      showToast('✅ 修改成功');
+    }
+  } else {
+    // 新增模式
+    // 检查重名
+    if (state.foods.some(f => f.name === name)) {
+      // 如果重名，询问是否覆盖（简化处理：直接覆盖/添加）
+      const existingBuiltin = BUILTIN_FOODS.find(b => b.name === name);
+      if (existingBuiltin) {
+        // 将内置菜品覆盖为自定义版本
+        state.customFoods.push({
+          id: 'c_' + Date.now(),
+          name,
+          meals,
+          tastes,
+          custom: true
+        });
+        saveCustomFoods();
+        mergeFoods();
+        showToast('✅ 已添加自定义版本');
+      } else {
+        showToast('⚠️ 该菜品已存在');
+        return;
+      }
+    } else {
+      state.customFoods.push({
+        id: 'c_' + Date.now(),
+        name,
+        meals,
+        tastes,
+        custom: true
+      });
+      saveCustomFoods();
+      mergeFoods();
+      showToast('✅ 添加成功');
+    }
+  }
+
+  closeEditFood();
+  updateFoodStats();
+  renderFoodList();
+}
+
+function deleteFood(id) {
+  if (!confirm('确定要删除这道菜品吗？')) return;
+  state.customFoods = state.customFoods.filter(f => f.id !== id);
+  saveCustomFoods();
+  mergeFoods();
+  updateFoodStats();
+  renderFoodList();
+  showToast('🗑️ 已删除');
+}
+
+// ==================== 历史记录 ====================
+function openHistory() {
+  renderHistory();
+  document.getElementById('history-modal').classList.add('visible');
+}
+
+function closeHistory() {
+  document.getElementById('history-modal').classList.remove('visible');
+}
+
+function renderHistory() {
+  const listEl = document.getElementById('history-list');
+  document.getElementById('history-count').textContent = state.history.length;
+
+  if (state.history.length === 0) {
+    listEl.innerHTML = `<div class="empty-state"><div class="emoji">📭</div>还没有记录哦</div>`;
+    return;
+  }
+
+  listEl.innerHTML = state.history.map(h => {
+    const time = new Date(h.time);
+    const timeStr = `${time.getMonth()+1}/${time.getDate()} ${String(time.getHours()).padStart(2,'0')}:${String(time.getMinutes()).padStart(2,'0')}`;
+    const mealEmoji = MEAL_EMOJIS[h.meal] || '🍽️';
+    return `
+      <div class="history-item">
+        <div class="history-info">
+          <span class="history-emoji">${mealEmoji}</span>
+          <div>
+            <div class="history-name">${h.name}</div>
+            <div class="history-time">${timeStr} · ${MEAL_LABELS[h.meal] || ''}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function clearHistory() {
+  if (!confirm('确定清空所有历史记录吗？')) return;
+  state.history = [];
+  saveHistory();
+  renderHistory();
+  showToast('🗑️ 已清空');
+}
+
+// ==================== 烟花特效 ====================
+const canvas = document.getElementById('fireworks');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let fireworksRAF = null;
+let fireworksTimers = [];
+let pendingFireworks = 0;
+
+class Particle {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2 + Math.random() * 4;
+    this.vx = Math.cos(angle) * speed;
+    this.vy = Math.sin(angle) * speed - 1.5;
+    this.size = 2 + Math.random() * 2.5;
+    this.life = 1;
+    this.decay = 0.01 + Math.random() * 0.012;
+    const colors = ['#FFAB28', '#FFD16D', '#FF6B35', '#E89828', '#FF7890'];
+    this.color = colors[Math.floor(Math.random() * colors.length)];
+  }
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.vy += 0.05;
+    this.life -= this.decay;
+  }
+  draw(ctx) {
+    ctx.save();
+    ctx.globalAlpha = Math.max(this.life, 0);
+    ctx.fillStyle = this.color;
+    ctx.shadowColor = this.color;
+    ctx.shadowBlur = 6;
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+  isDead() { return this.life <= 0; }
+}
+
+function spawnFirework(x, y) {
+  for (let i = 0; i < 40; i++) {
+    particles.push(new Particle(x, y));
+  }
+}
+
+function triggerFireworks() {
+  // 每次点击都重新开始，清理上一轮仍未执行的任务。
+  if (fireworksRAF !== null) cancelAnimationFrame(fireworksRAF);
+  fireworksRAF = null;
+  fireworksTimers.forEach(timer => clearTimeout(timer));
+  fireworksTimers = [];
+  particles = [];
+  pendingFireworks = 5;
+
+  const c = document.getElementById('fireworks');
+  c.classList.add('active');
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+
+  const burst = () => {
+    // 礼花围绕文字两侧绽放，中心留给菜名。
+    const x = canvas.width * (Math.random() < .5 ? .22 : .78);
+    const y = canvas.height * (.3 + Math.random() * .25);
+    spawnFirework(x, y);
+  };
+  // 同步释放第一束，避免动画帧先于 setTimeout 执行导致提前结束。
+  burst();
+  for (let i = 1; i < 6; i++) {
+    fireworksTimers.push(setTimeout(() => {
+      burst();
+      pendingFireworks--;
+    }, i * 250));
+  }
+
+  if (!fireworksRAF) {
+    fireworksRAF = requestAnimationFrame(function loop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles = particles.filter(p => !p.isDead());
+      particles.forEach(p => { p.update(); p.draw(ctx); });
+
+      if (particles.length === 0 && pendingFireworks === 0) {
+        fireworksRAF = null;
+        fireworksTimers = [];
+        c.classList.remove('active');
+        return;
+      }
+      fireworksRAF = requestAnimationFrame(loop);
+    });
+  }
+}
+
+function stopFireworks() {
+  if (fireworksRAF !== null) cancelAnimationFrame(fireworksRAF);
+  fireworksRAF = null;
+  fireworksTimers.forEach(timer => clearTimeout(timer));
+  fireworksTimers = [];
+  pendingFireworks = 0;
+  particles = [];
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  canvas.classList.remove('active');
+}
+
+// ==================== 吐司提示 ====================
+let toastTimer = null;
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.remove('show');
+  void toast.offsetWidth;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// ==================== 初始化 ====================
+function init() {
+  // 加载用户数据
+  state.customFoods = loadCustomFoods();
+  state.history = loadHistory();
+  mergeFoods();
+
+  // 加载偏好
+  const prefs = loadPrefs();
+  if (prefs.meal) {
+    const mealEl = document.getElementById('meal-' + prefs.meal);
+    if (mealEl) mealEl.checked = true;
+    state.currentMeal = prefs.meal;
+  }
+  if (prefs.taste) {
+    const tasteEl = document.getElementById('taste-' + prefs.taste);
+    if (tasteEl) tasteEl.checked = true;
+    state.currentTaste = prefs.taste;
+  }
+
+  // 监听选择变化，实时反馈筛选数量
+  document.querySelectorAll('input[name="meal"], input[name="taste"]').forEach(el => {
+    el.addEventListener('change', () => {
+      const meal = document.querySelector('input[name="meal"]:checked')?.value;
+      const taste = document.querySelector('input[name="taste"]:checked')?.value;
+      if (meal && taste) {
+        const pool = getFilteredPool(meal, taste);
+        const warnEl = document.getElementById('warn-tip');
+        if (pool.length === 0) {
+          warnEl.textContent = '⚠️ 当前条件无匹配，将自动从全库抽取';
+          warnEl.classList.add('visible');
+        } else {
+          warnEl.classList.remove('visible');
+        }
+      }
+    });
+  });
+
+  // 窗口大小变化
+  window.addEventListener('resize', () => {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+  });
+}
+
+init();
+</script>
+</body>
+</html>
